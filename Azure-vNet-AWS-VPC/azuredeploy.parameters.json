@@ -1,0 +1,23 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "North Europe"
+    },
+    "azureVNetName1": {
+      "value": "MVPDay2017vNet1"
+    },
+    "sharedKey": {
+      "value": "I37VL2n5jVY38gcy53F7Ur23TgLeYkWu"
+    },
+    "gCPPublicIPAddress": {
+      "value": "35.187.85.231"
+    },
+    "gcpasn": { "value": "65533" },
+    "gcpbgppeeringaddress": { "value": "169.254.21.77" },
+    "gcpvpcaddressspace": {
+      "value": "10.255.0.0/16"
+    }
+  }
+}

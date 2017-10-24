@@ -1,0 +1,250 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Location where resources will be deployed."
+      }
+    },
+    "azureVNetName1": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Azure virtual network"
+      }
+    },
+    "azureVNetName2": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Azure virtual network #2"
+      }
+    },
+    "sharedKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The shared key used to establish connection between the Azure vNet Gateway and the GCP router"
+      }
+    },
+    "gCPPublicIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "The public IP address of the GCP router"
+      }
+    },
+    "gCPASN": {
+      "type": "string",
+      "metadata": { "description": "The GCP AS Number" }
+    },
+    "gcpbgppeeringaddress": {
+      "type": "string",
+      "metadata": { "description": "The GCP BGP Peering IP Address" }
+    },
+    "gcpvpcaddressspace": {
+      "type": "string",
+      "metadata": { "description": "The address space of the GCP VPC, the only address space needed is the BGP peering IP" }
+    }
+  },
+  "variables": {
+    "addressSpacePrefix": "10.128.0.0/16",
+    "subnetName": "subnet1",
+    "subnetPrefix": "10.128.1.0/24",
+    "addressSpacePrefix2": "10.129.0.0/16",
+    "subnetName2": "subnet1",
+    "subnetPrefix2": "10.129.1.0/24",
+    "gatewayName": "[concat(parameters('azureVNetName1'),'-GW')]",
+    "gatewaySubnetPrefix": "10.128.255.224/27",
+    "gatewaySubnetPrefix2": "10.129.255.224/27",
+    "gatewayPublicIPName": "[concat('gw1pip', uniqueString(resourceGroup().id))]",
+    "connectionName": "Azure-to-GoogleCloudPlatform",
+    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks',parameters('azureVNetName1'))]",
+    "gatewaySubnetRef": "[concat(variables('vnetRef'),'/subnets/','GatewaySubnet')]",
+    "gatewaySku": "Standard",
+    "localGatewayName": "GoogleCloudPlatformRouter"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('azureVNetName1')]",
+      "location": "[parameters('location')]",
+      "comments": "This is the Azure vNet",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressSpacePrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "[variables('gatewaySubnetPrefix')]"
+            },
+            "resources": [
+              {
+                "apiVersion": "2016-06-01",
+                "type": "virtualNetworkPeerings",
+                "name": "[concat(parameters('azureVNetName1'),'peering')]",
+                "location": "[parameters('location')]",
+                "dependsOn": [
+                  "[concat('Microsoft.Network/virtualNetworks/', parameters('azureVNetName1'))]",
+                  "[concat('Microsoft.Network/virtualNetworks/', parameters('azureVNetName2'))]"
+                ],
+                "comments": "This is the peering from vNet 1 to vNet 2",
+                "properties": {
+                  "allowVirtualNetworkAccess": "true",
+                  "allowForwardedTraffic": "false",
+                  "allowGatewayTransit": "false",
+                  "useRemoteGateways": "false",
+                  "remoteVirtualNetwork": {
+                    "id": "[resourceId('Microsoft.Network/virtualNetworks',parameters('azureVNetName2'))]"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('azureVNetName2')]",
+      "location": "[parameters('location')]",
+      "comments": "This is the Azure vNet #2",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressSpacePrefix2')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName2')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix2')]"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "[variables('gatewaySubnetPrefix2')]"
+            }
+          }
+        ]
+      },
+      "resources": [
+        {
+          "apiVersion": "2016-06-01",
+          "type": "virtualNetworkPeerings",
+          "name": "[concat(parameters('azureVNetName2'),'peering')]",
+          "location": "[parameters('location')]",
+          "dependsOn": [
+            "[concat('Microsoft.Network/virtualNetworks/', parameters('azureVNetName1'))]",
+            "[concat('Microsoft.Network/virtualNetworks/', parameters('azureVNetName2'))]"
+          ],
+          "comments": "This is the peering from vNet 2 to vNet 1",
+          "properties": {
+            "allowVirtualNetworkAccess": "true",
+            "allowForwardedTraffic": "false",
+            "allowGatewayTransit": "false",
+            "useRemoteGateways": "false",
+            "remoteVirtualNetwork": {
+              "id": "[resourceId('Microsoft.Network/virtualNetworks',parameters('azureVNetName1'))]"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "PIP-vNetGW",
+      "location": "[parameters('location')]",
+      "comments": "This is the public IP for Azure vNet Gateway",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[variables('gatewayName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', 'PIP-vNetGW')]",
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('azureVNetName1'))]"
+      ],
+      "comments": "This is the Azure vNet Gateway",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('gatewaySubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses','PIP-vNetGW')]"
+              }
+            },
+            "name": "vNetGatewayIPConfig"
+          }
+        ],
+        "gatewayType": "Vpn",
+        "sku": {
+          "name": "[variables('gatewaySku')]",
+          "tier": "[variables('gatewaySku')]"
+        },
+        "vpnType": "RouteBased",
+        "enableBgp": "true"
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/localNetworkGateways",
+      "name": "[variables('localGatewayName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "localNetworkAddressSpace": {
+          "addressPrefixes": [ "[parameters('gcpvpcaddressspace')]" ]
+        },
+        "gatewayIpAddress": "[parameters('gCPPublicIPAddress')]",
+        "bgpSettings": {
+          "asn": "[parameters('gCPASN')]",
+          "BgpPeeringAddress": "[parameters('gcpbgppeeringaddress')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/connections",
+      "name": "[variables('connectionName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/virtualNetworkGateways/', variables('gatewayName'))]",
+        "[concat('Microsoft.Network/localNetworkGateways/', variables('localGatewayName'))]"
+      ],
+      "comments": "This is the VPN connection from Azure to GCP",
+      "properties": {
+        "virtualNetworkGateway1": {
+          "id": "[resourceId('Microsoft.Network/virtualNetworkGateways',variables('gatewayName'))]"
+        },
+        "localNetworkGateway2": {
+          "id": "[resourceId('Microsoft.Network/LocalNetworkGateways',variables('localGatewayName'))]"
+        },
+        "connectionType": "IPSec",
+        "routingWeight": 3,
+        "sharedKey": "[parameters('sharedKey')]",
+        "enableBGP": "true"
+      }
+    }
+  ]
+}

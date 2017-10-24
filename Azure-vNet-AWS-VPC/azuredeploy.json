@@ -1,0 +1,118 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json",
+    "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Location where resources will be deployed."
+      }
+    },
+    "azureVNetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the Azure virtual network"
+      }
+    },
+    "sharedKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The shared key used to establish connection between the Azure vNet Gateway and the AWS Gateway"
+      }
+    },
+    "aWSPublicIPAddress": {
+      "type": "string",
+      "metadata": {
+        "description": "The public IP address of the AWS GW"
+      }
+    }
+  },
+  "variables": {
+    "addressSpacePrefix": "10.128.0.0/16",
+    "subnetName": "subnet1",
+    "subnetPrefix": "10.128.1.0/24",
+    "gatewayName": "[concat(parameters('azureVNetName'),'-GW')]",
+    "gatewaySubnetPrefix": "10.128.255.224/27",
+    "gatewayPublicIPName": "[concat('gw1pip', uniqueString(resourceGroup().id))]",
+    "connectionName": "Azure-to-AWS",
+    "vnetRef": "[resourceId('Microsoft.Network/virtualNetworks',parameters('azureVNetName'))]",
+    "gatewaySubnetRef": "[concat(variables('vnetRef'),'/subnets/','GatewaySubnet')]",
+    "gatewaySku": "Standard"
+  },
+  "resources": [
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[parameters('azureVNetName')]",
+      "location": "[parameters('location')]",
+      "comments": "This is the Azure vNet",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressSpacePrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetPrefix')]"
+            }
+          },
+          {
+            "name": "GatewaySubnet",
+            "properties": {
+              "addressPrefix": "[variables('gatewaySubnetPrefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "PIP-vNetGW",
+      "location": "[parameters('location')]",
+      "comments": "This is the public IP for Azure vNet Gateway",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic"
+      }
+    },
+    {
+      "apiVersion": "2016-03-30",
+      "type": "Microsoft.Network/virtualNetworkGateways",
+      "name": "[variables('gatewayName')]",
+      "location": "[parameters('location')]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', 'PIP-vNetGW')]",
+        "[concat('Microsoft.Network/virtualNetworks/', parameters('azureVNetName'))]"
+      ],
+      "comments": "This is the Azure vNet Gateway",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('gatewaySubnetRef')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses','PIP-vNetGW')]"
+              }
+            },
+            "name": "vNetGatewayIPConfig"
+          }
+        ],
+        "gatewayType": "Vpn",
+        "sku": {
+          "name": "[variables('gatewaySku')]",
+          "tier": "[variables('gatewaySku')]"
+        },
+        "vpnType": "RouteBased",
+        "enableBgp": "true",
+        "bgpSettings": {
+        }
+      }
+    }
+  ]
+}
