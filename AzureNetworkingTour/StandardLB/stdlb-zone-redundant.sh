@@ -103,7 +103,7 @@ for i in `seq 1 3`; do
     --name "VM-$i" \
     --nics "NIC-$base-$i" \
     --image UbuntuLTS \
-    --size "Standard_A2_v2"
+    --size "Standard_A2_v2" \
     --generate-ssh-keys \
     --zone $i \
     --custom-data cloud-init.yml
