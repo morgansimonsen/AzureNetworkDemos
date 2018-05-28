@@ -1,6 +1,7 @@
-base = StandardLB-Zonal
-rg = "RG-$base"
-location = westeurope
+#!/bin/bash
+base=StandardLB-Zonal
+rg="RG-$base"
+location=westeurope
 
 # create rg
 az group create \
