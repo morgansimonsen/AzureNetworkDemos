@@ -8,14 +8,14 @@ rg="RG-$base"
 location=westeurope
 
 # create rg
-echo "create rg"
+echo -e "\x1B[01;95m create rg \x1B[0m"
 az group create \
 --name $rg \
 --location $location
 
 # create zonal public ip
 # the ip is deployed in a zone
-echo "create public ip; since a zone is specified it becomes a zonal ip"
+echo -e "\x1B[01;95m create public ip; since a zone is specified it becomes a zonal ip \x1B[0m"
 az network public-ip create \
 --resource-group $rg \
 --name "PIP-$base" \
@@ -23,7 +23,7 @@ az network public-ip create \
 --zone 1
 
 # create lb
-echo "create lb"
+echo -e "\x1B[01;95m create lb \x1B[0m"
 az network lb create \
 --resource-group $rg \
 --name "LB-$base" \
@@ -33,7 +33,7 @@ az network lb create \
 --sku Standard
 
 # create health probe
-echo "create health probe"
+echo -e "\x1B[01;95m create health probe \x1B[0m"
 az network lb probe create \
 --resource-group $rg \
 --lb-name "LB-$base" \
@@ -42,7 +42,7 @@ az network lb probe create \
 --port 80
 
 # create lb rule
-echo "create lb rule"
+echo -e "\x1B[01;95m create lb rule \x1B[0m"
 az network lb rule create \
 --resource-group $rg \
 --lb-name "LB-$base" \
@@ -55,7 +55,7 @@ az network lb rule create \
 --probe-name "HP-$base"
 
 # create vnet
-echo "create vnet"
+echo -e "\x1B[01;95m create vnet \x1B[0m"
 az network vnet create \
 --resource-group $rg \
 --location $location \
@@ -63,13 +63,13 @@ az network vnet create \
 --subnet-name "subnet1-$base"
 
 # create nsg
-echo "create nsg"
+echo -e "\x1B[01;95m create nsg \x1B[0m"
 az network nsg create \
 --resource-group $rg \
 --name "NSG-$base"
 
 # create nsg rule
-echo "create nsg rule"
+echo -e "\x1B[01;95m create nsg rule \x1B[0m"
 az network nsg rule create \
 --resource-group $rg \
 --nsg-name "NSG-$base" \
@@ -84,7 +84,7 @@ az network nsg rule create \
 --priority 200
 
 # create nics
-echo "create nics"
+echo -e "\x1B[01;95m create nics \x1B[0m"
 for i in `seq 1 3`; do
     az network nic create \
         --resource-group $rg \
@@ -97,7 +97,7 @@ for i in `seq 1 3`; do
 done
 
 # create zonal vms
-echo "create zonal vms; all in the same zone"
+echo -e "\x1B[01;95m create zonal vms; all in the same zone \x1B[0m"
 for i in `seq 1 3`; do
   az vm create \
     --resource-group $rg \
@@ -111,7 +111,7 @@ for i in `seq 1 3`; do
 done
 
 # test
-echo "test"
+echo -e "\x1B[01;95m test \x1B[0m"
 az network public-ip show \
     --resource-group $rg \
     --name "PIP-$base" \
