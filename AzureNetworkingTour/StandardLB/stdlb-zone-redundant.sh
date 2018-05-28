@@ -1,3 +1,7 @@
+# Standarb LB zone redundant frontend
+# zone redundant means serverd by all zones in a region
+# you dont specify zones
+
 #!/bin/bash
 base=StandardLB-Zonal
 rg="RG-$base"
@@ -10,7 +14,7 @@ az group create \
 --location $location
 
 # create public ip
-echo "create public ip"
+echo "create public ip; since no zone is specified it becomes a zone redundant ip"
 az network public-ip create \
 --resource-group $rg \
 --name "PIP-$base" \
@@ -91,7 +95,8 @@ for i in `seq 1 3`; do
 done
 
 # create zonal vms
-echo "create zonal vms"
+# one vm pr zone, the LB is still zone redundant
+echo "create zonal vms; one in each zone to protect against zone failure"
 for i in `seq 1 3`; do
   az vm create \
     --resource-group $rg \
