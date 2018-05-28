@@ -100,7 +100,12 @@ $nic3 = New-AzureRmNetworkInterface `
   -ApplicationSecurityGroup $databaseAsg
 
   # Create user object
-$cred = Get-Credential -Message "Enter a username and password for the virtual machine."
+  $username = "localadmin"
+  $PlainTextPassword = ([char[]]([char]33..[char]95) + ([char[]]([char]97..[char]126)) + 0..9 | sort {Get-Random})[0..15] -join ''
+  $secpasswd = ConvertTo-SecureString $PlainTextPassword -AsPlainText -Force
+  $cred = New-Object System.Management.Automation.PSCredential ($username, $secpasswd)
+  Write-Output "Username: $username"
+  Write-Output "Password: $PlainTextPassword"
 
 # Create the web server virtual machine configuration and virtual machine.
 $webVmConfig = New-AzureRmVMConfig `
