@@ -4,17 +4,20 @@ rg="RG-$base"
 location=westeurope
 
 # create rg
+echo "create rg"
 az group create \
 --name $rg \
 --location $location
 
 # create public ip
+echo "create public ip"
 az network public-ip create \
 --resource-group $rg \
 --name "PIP-$base" \
 --sku Standard
 
 # create lb
+echo "create lb"
 az network lb create \
 --resource-group $rg \
 --name "LB-$base" \
@@ -24,6 +27,7 @@ az network lb create \
 --sku Standard
 
 # create health probe
+echo "create health probe"
 az network lb probe create \
 --resource-group $rg \
 --lb-name "LB-$base" \
@@ -32,6 +36,7 @@ az network lb probe create \
 --port 80
 
 # create lb rule
+echo "create lb rule"
 az network lb rule create \
 --resource-group $rg \
 --lb-name "LB-$base" \
@@ -44,6 +49,7 @@ az network lb rule create \
 --probe-name "HP-$base"
 
 # create vnet
+echo "create vnet"
 az network vnet create \
 --resource-group $rg \
 --location $location \
@@ -51,11 +57,13 @@ az network vnet create \
 --subnet-name "subnet1-$base"
 
 # create nsg
+echo "create nsg"
 az network nsg create \
 --resource-group $rg \
 --name "NSG-$base"
 
 # create nsg rule
+echo "create nsg rule"
 az network nsg rule create \
 --resource-group $rg \
 --nsg-name "NSG-$base" \
@@ -70,6 +78,7 @@ az network nsg rule create \
 --priority 200
 
 # create nics
+echo "create nics"
 for i in `seq 1 3`; do
     az network nic create \
         --resource-group $rg \
@@ -82,6 +91,7 @@ for i in `seq 1 3`; do
 done
 
 # create zonal vms
+echo "create zonal vms"
 for i in `seq 1 3`; do
   az vm create \
     --resource-group $rg \
@@ -94,6 +104,7 @@ for i in `seq 1 3`; do
 done
 
 # test
+echo "test"
 az network public-ip show \
     --resource-group $rg \
     --name "PIP-$base" \
