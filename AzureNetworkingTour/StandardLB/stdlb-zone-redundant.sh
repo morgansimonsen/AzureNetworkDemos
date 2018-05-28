@@ -3,7 +3,7 @@
 # you dont specify zones
 
 #!/bin/bash
-base=StandardLB-Zonal
+base=StandardLB-ZoneRedundant
 rg="RG-$base"
 location=westeurope
 
