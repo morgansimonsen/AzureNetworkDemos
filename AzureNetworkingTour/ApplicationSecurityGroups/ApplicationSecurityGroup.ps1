@@ -81,7 +81,7 @@ $databaseRule = New-AzureRmNetworkSecurityRuleConfig `
   -Location $location `
   -Subnet $vNet.Subnets[0] `
   -NetworkSecurityGroup $nsg `
-  -ApplicationSecurityGroup $webAsg,$appAsg
+  -ApplicationSecurityGroupId $webAsg.Id,$appAsg.Id
 
 $nic2 = New-AzureRmNetworkInterface `
   -Name myNic2 `
@@ -89,7 +89,7 @@ $nic2 = New-AzureRmNetworkInterface `
   -Location $location `
   -Subnet $vNet.Subnets[0] `
   -NetworkSecurityGroup $nsg `
-  -ApplicationSecurityGroup $appAsg
+  -ApplicationSecurityGroupId $appAsg.Id
 
 $nic3 = New-AzureRmNetworkInterface `
   -Name myNic3 `
@@ -97,7 +97,7 @@ $nic3 = New-AzureRmNetworkInterface `
   -Location $location `
   -Subnet $vNet.Subnets[0] `
   -NetworkSecurityGroup $nsg `
-  -ApplicationSecurityGroup $databaseAsg
+  -ApplicationSecurityGroupId $databaseAsg.Id
 
   # Create user object
   $username = "localadmin"
