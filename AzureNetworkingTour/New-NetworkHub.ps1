@@ -32,21 +32,23 @@ $OnPremBGPPeerIP = "10.52.255.254"
 
 # Collection of subnets to create in the vNet
 $HubSubnets = @{
-    "GatewaySubnet" = "10.0.255.0/26"
+	"GatewaySubnet" = "10.0.255.0/26"
+	"AzureFirewallSubnet"= "10.0.254.0/26"
     "external"  = '10.0.1.0/24'
-    "internal" = '10.0.2.0/24'
+	"internal" = '10.0.2.0/24'
+	"hub" = '10.0.3.0/24'
     "servers"  = '10.0.100.0/24'
     "clients" = '10.0.101.0/24'
     "management" = '10.0.102.0/24'
 }
 
-$ServiceEndpointSubnets = ("internal","servers","clients","management")
+$ServiceEndpointSubnets = ("internal","servers","clients","management","hub")
 #$DNSIPs = "10.83.254.203", "10.83.254.204", "10.83.254.205", "10.83.254.206"
 #$DNSIPs = "208.67.222.220", "208.67.222.222"
 
 
 # Tags
-$ResourceTags = @{ "System ID"="0000"; "Cost Center ID"="0000" }
+$ResourceTags = @{ "System ID"="0000"; "Cost Center ID"="0000"; "Conference"="ESPC2018" }
 # ======= End of variable area =======
 
 #Set-AzureRmContext -Subscription $subscriptionName
@@ -91,6 +93,7 @@ $VNetGWIPConfigName = $VNetGWName+"-ipconfig"
 $VNetGWIPConfig = New-AzureRmVirtualNetworkGatewayIpConfig -Name $VNetGWIPConfigName `
 															-Subnet $GatewaySubnet `
 															-PublicIpAddress $VNetGWPIP 
+<#
 $VNetGW = New-AzureRmVirtualNetworkGateway -Name $VNetGWName `
 											-ResourceGroupName $RGHub.ResourceGroupName `
 											-Location $HubLocation `
@@ -126,11 +129,12 @@ $S2SConnection = New-AzureRmVirtualNetworkGatewayConnection -Name ($VNetHubName+
 								-EnableBGP $True `
 								-Tag $ResourceTags
 
-#$connection = New-AzureRmVirtualNetworkGatewayConnection -Name $ERConnectionName `
-#														-ResourceGroupName $RGHub.ResourceGroupName `
-#														-Location $HubLocation `
-#														-VirtualNetworkGateway1 $VNetGW `
-#														-PeerId $ERPeerId `
-#														-ConnectionType ExpressRoute `
-#														-AuthorizationKey $ERAuthZKey `
-#														-Tag $ResourceTags
+$connection = New-AzureRmVirtualNetworkGatewayConnection -Name $ERConnectionName `
+														-ResourceGroupName $RGHub.ResourceGroupName `
+														-Location $HubLocation `
+														-VirtualNetworkGateway1 $VNetGW `
+														-PeerId $ERPeerId `
+														-ConnectionType ExpressRoute `
+														-AuthorizationKey $ERAuthZKey `
+														-Tag $ResourceTags
+#>
